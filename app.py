@@ -10,7 +10,7 @@ from flask_cors import cross_origin
 app = Flask(__name__)
 
 #Loading the model from pickle file
-model = pickle.load(open('rf1.pkl','rb'))
+model = pickle.load(open('lr_trained_model.sav','rb'))
 @app.route('/')
 @app.route('/home')
 def home():
@@ -32,11 +32,18 @@ def processRequest(req):
     result = req.get("queryResult")
     #Fetching the data points
     parameters = result.get("parameters")
-    Petal_length=parameters.get("number")
-    Petal_width = parameters.get("number1")
-    Sepal_length=parameters.get("number2")
-    Sepal_width=parameters.get("number3")
-    int_features = [Petal_length,Petal_width,Sepal_length,Sepal_width]
+    gender=parameters.get("gender")
+    age = parameters.get("age")
+    edu=parameters.get("edu")
+    inc=parameters.get("inc")
+    trsleep=parameters.get("trsleep")
+    sleephrs=parameters.get("sleephrs")
+    sed=parameters.get("sed")
+    work=parameters.get("work")
+    lim=parameters.get("lim")
+    mem=parameters.get("mem")
+    pres=parameters.get("pres")
+    int_features = [gender,age,edu,inc,trsleep,sleephrs, sed, work,lim,mem,pres]
     #Dumping the data into an array
     final_features = [np.array(int_features)]
     
@@ -44,28 +51,26 @@ def processRequest(req):
     intent = result.get("intent").get('displayName')
     
     #Fitting out model with the data points
-    if (intent=='IrisData'):
+    if (intent=='DepData'):
         prediction = model.predict(final_features)
         print(prediction)
-        output=prediction
-        #output = round(prediction[0], 2)
+        #output=prediction
+        output = round(prediction[0], 2)
        	
-        if(output=='Iris-setosa'):
-            flowr = 'Setosa'
+        if(output== 0):
+            state = 'Not Depressed'
     
-        if(output=="Iris-versicolor"):
-            flowr = 'Versicolour'
-        
-        if(output=="Iris-virginica"):
-            flowr = 'Virginica'
+        else:
             
+            state = 'Depressed'
+    
+                   
         #Returning back the fullfilment text back to DialogFlow
-        fulfillmentText= "The Iris type seems to be..  {} !".format(flowr)
+        fulfillmentText= "Your Depression Status is.  {} !".format(state)
         #log.write_log(sessionID, "Bot Says: "+fulfillmentText)
         return { "fulfillmentText": fulfillmentText}
-
 
 if __name__ == '__main__':
     app.secret_key = 'ItIsASecret'
     app.debug = True
-    app.run(port=5003)
+    app.run(host="0.0.0.0",port=5001)
